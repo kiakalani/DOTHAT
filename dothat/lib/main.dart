@@ -1,3 +1,4 @@
+import 'package:dothat/storage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -116,7 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () => {
+          TodoDB().executeQuery(
+              "INSERT INTO todo_category (name) VALUES (?) RETURNING ROWID;",
+              ['A test']).then((value) => print(value)),
+          print('Hello?')
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
