@@ -1,3 +1,4 @@
+import 'package:dothat/storage.dart';
 import 'package:flutter/material.dart';
 import 'home.dart';
 
@@ -59,7 +60,15 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () => {
+          TodoDB()
+              .deleteReminder("An item", "Joojoo2", 300000000)
+              .then((value) => {
+                    TodoDB()
+                        .getReminders("An item", "Joojoo2")
+                        .then((v) => {print(v)})
+                  })
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
