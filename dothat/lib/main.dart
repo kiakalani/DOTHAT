@@ -118,10 +118,13 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => {
-          TodoDB().executeQuery(
-              "INSERT INTO todo_category (name) VALUES (?) RETURNING ROWID;",
-              ['A test']).then((value) => print(value)),
-          print('Hello?')
+          TodoDB()
+              .deleteReminder("An item", "Joojoo2", 300000000)
+              .then((value) => {
+                    TodoDB()
+                        .getReminders("An item", "Joojoo2")
+                        .then((v) => {print(v)})
+                  })
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
