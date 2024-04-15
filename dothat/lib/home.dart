@@ -16,6 +16,7 @@ class CategoryList {
 
 class Task {
   String name;
+  bool isSelected;
   String? dueDate;
   String? status;
   String? importance;
@@ -23,6 +24,7 @@ class Task {
 
   Task(
       {required this.name,
+      this.isSelected = false,
       this.dueDate,
       this.status,
       this.importance,
@@ -48,7 +50,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Home'),
+        title: Text(lists[_selectedIndex].name),
       ),
       drawer: _buildDrawer(),
       body: Column(
@@ -60,6 +62,22 @@ class _HomePageState extends State<HomePage> {
                 ...List.generate(lists[_selectedIndex].tasks.length, (index) {
                   return ListTile(
                     title: Text(lists[_selectedIndex].tasks[index].name),
+                    leading: Checkbox(
+                      value: lists[_selectedIndex].tasks[index].isSelected,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          lists[_selectedIndex].tasks[index].isSelected =value!;
+                        });
+                      },
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          lists[_selectedIndex].tasks.removeAt(index);
+                        });
+                      },
+                    ),
                   );
                 }),
               ],
@@ -72,6 +90,7 @@ class _HomePageState extends State<HomePage> {
             onAdd: (String value) {
               setState(() {
                 lists[_selectedIndex].tasks.add(Task(name: value));
+                taskNameController.clear();
                 _isAddingNewTask = false;
               });
             },
@@ -115,6 +134,14 @@ class _HomePageState extends State<HomePage> {
                         });
                         Navigator.pop(context);
                       },
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            lists.removeAt(index);
+                          });
+                        },
+                      ),
                     );
                   }),
                 ],
@@ -128,6 +155,7 @@ class _HomePageState extends State<HomePage> {
                 if (value.isNotEmpty) {
                   setState(() {
                     lists.add(CategoryList(name: value, tasks: []));
+                    listNameController.clear();
                     _isAddingNewList = false;
                   });
                 }
@@ -170,7 +198,6 @@ class _HomePageState extends State<HomePage> {
               onSubmitted: (value) {
                 if (value.isNotEmpty) {
                   onAdd(textController.text);
-                  textController.clear;
                 }
               },
             )
