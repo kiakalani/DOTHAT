@@ -1,6 +1,7 @@
 import 'package:dothat/storage.dart';
 import 'package:flutter/material.dart';
 import 'taskDetails.dart';
+import 'search.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -149,40 +150,44 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               children: [
                 // show list of tasks in a category
-                ...lists.isEmpty ? [] : List.generate(lists[_selectedIndex].tasks.length, (index) {
-                  return ListTile(
-                    title: Text(lists[_selectedIndex].tasks[index].name),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TaskDetails(
-                              task: lists[_selectedIndex].tasks[index]),
-                        ),
-                      );
-                    },
-                    leading: Checkbox(
-                      value: lists[_selectedIndex].tasks[index].isSelected,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          lists[_selectedIndex].tasks[index].isSelected =
-                              value!;
-                        });
-                      },
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        print(
-                          "Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
-                        removeItem(lists[_selectedIndex], index);
-                        // setState(() {
-                        //   lists[_selectedIndex].tasks.removeAt(index);
-                        // });
-                      },
-                    ),
-                  );
-                }),
+                ...lists.isEmpty
+                    ? []
+                    : List.generate(lists[_selectedIndex].tasks.length,
+                        (index) {
+                        return ListTile(
+                          title: Text(lists[_selectedIndex].tasks[index].name),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TaskDetails(
+                                    task: lists[_selectedIndex].tasks[index]),
+                              ),
+                            );
+                          },
+                          leading: Checkbox(
+                            value:
+                                lists[_selectedIndex].tasks[index].isSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                lists[_selectedIndex].tasks[index].isSelected =
+                                    value!;
+                              });
+                            },
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              print(
+                                  "Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
+                              removeItem(lists[_selectedIndex], index);
+                              // setState(() {
+                              //   lists[_selectedIndex].tasks.removeAt(index);
+                              // });
+                            },
+                          ),
+                        );
+                      }),
               ],
             ),
           ),
@@ -206,36 +211,33 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildTitle() {
     return _isEditingListName
-      ? TextField(
-          controller: listNameControllerInTask,
-          autofocus: true,
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              print("List name is changed to $value");
+        ? TextField(
+            controller: listNameControllerInTask,
+            autofocus: true,
+            onSubmitted: (value) {
+              if (value.isNotEmpty) {
+                print("List name is changed to $value");
+                setState(() {
+                  lists[_selectedIndex].name = value;
+                });
+              }
               setState(() {
-                lists[_selectedIndex].name = value;
+                _isEditingListName = false;
               });
-            }
-            setState(() {
-              _isEditingListName = false;
-            });
-          },
-        )
-      : InkWell(
-          onTap: () {
-            setState(() {
-              listNameControllerInTask.text = lists[_selectedIndex].name;
-              _isEditingListName = true;
-            });
-          },
-          child: Text(
-            lists.isNotEmpty 
-              ? 
-              lists[_selectedIndex].name 
-              : '',
+            },
+          )
+        : InkWell(
+            onTap: () {
+              setState(() {
+                listNameControllerInTask.text = lists[_selectedIndex].name;
+                _isEditingListName = true;
+              });
+            },
+            child: Text(
+              lists.isNotEmpty ? lists[_selectedIndex].name : '',
               style: TextStyle(fontSize: 24),
-          ),
-        );
+            ),
+          );
   }
 
   Widget _buildDrawer() {
@@ -246,15 +248,33 @@ class _HomePageState extends State<HomePage> {
           Container(
               height: 100,
               color: const Color(0xFF0ABAB5),
-              child: const Padding(
-                  padding: EdgeInsets.only(top: 45),
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Do that',
-                      style: TextStyle(color: Colors.white, fontSize: 24),
+              child: Padding(
+                padding: EdgeInsets.only(top: 45),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 20), 
+                      child: Text(
+                        'Do that',
+                        style: TextStyle(color: Colors.white, fontSize: 24),
+                      ),
                     ),
-                  ))),
+                    // push search icon to the right
+                    const Spacer(),
+                    // search icon
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SearchPage()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              )),
           Expanded(
             child: ListView(
               children: [
