@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'taskDetails.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,6 +63,14 @@ class _HomePageState extends State<HomePage> {
                 ...List.generate(lists[_selectedIndex].tasks.length, (index) {
                   return ListTile(
                     title: Text(lists[_selectedIndex].tasks[index].name),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskDetails(task: lists[_selectedIndex].tasks[index]),
+                        ),
+                      );
+                    },
                     leading: Checkbox(
                       value: lists[_selectedIndex].tasks[index].isSelected,
                       onChanged: (bool? value) {
@@ -73,6 +82,7 @@ class _HomePageState extends State<HomePage> {
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
+                        print("Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
                         setState(() {
                           lists[_selectedIndex].tasks.removeAt(index);
                         });
@@ -88,11 +98,14 @@ class _HomePageState extends State<HomePage> {
             textController: taskNameController,
             hintText: "+ Add New Task", 
             onAdd: (String value) {
-              setState(() {
-                lists[_selectedIndex].tasks.add(Task(name: value));
-                taskNameController.clear();
-                _isAddingNewTask = false;
-              });
+              if (value.isNotEmpty) {
+                print("Add task: $value");
+                setState(() {
+                  lists[_selectedIndex].tasks.add(Task(name: value));
+                  taskNameController.clear();
+                  _isAddingNewTask = false;
+                });
+              }
             },
             toggleAdding: () => setState(() {
               _isAddingNewTask = true;
@@ -137,6 +150,7 @@ class _HomePageState extends State<HomePage> {
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
+                          print("Remove list: ${lists[index].name}");
                           setState(() {
                             lists.removeAt(index);
                           });
@@ -153,6 +167,7 @@ class _HomePageState extends State<HomePage> {
               hintText: "+ New List", 
               onAdd: (String value) {
                 if (value.isNotEmpty) {
+                  print("Add list: $value");
                   setState(() {
                     lists.add(CategoryList(name: value, tasks: []));
                     listNameController.clear();
