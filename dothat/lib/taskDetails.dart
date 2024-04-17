@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'home.dart';
 
 class TaskDetails extends StatefulWidget {
@@ -10,10 +11,17 @@ class TaskDetails extends StatefulWidget {
   _TaskDetailsState createState() => _TaskDetailsState();
 }
 
+
 class _TaskDetailsState extends State<TaskDetails> {
+  // options for status
+  List<String> statusOptions = ['To do', 'Started', 'In progress', 'Completed', 'Overdue'];
+  List<String> importanceOptions = [for (int i = 1; i < 6; i++) i.toString()];
   late TextEditingController _nameController;
   bool _isEditingName = false;
+  String? _currentStatus;
+  String? _currentImportance;
 
+  // initialize data from database
   @override
   void initState() {
     super.initState();
@@ -24,6 +32,46 @@ class _TaskDetailsState extends State<TaskDetails> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate(bool isDueDate) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: widget.task.dueDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      _pickTime(pickedDate, isDueDate);
+    }
+  }
+
+  Future<void> _pickTime(DateTime pickedDate, bool isDueDate) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(widget.task.dueDate ?? DateTime.now()),
+    );
+    if (pickedTime != null) {
+      final DateTime newDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+      setState(() {
+        // set due date
+        if (isDueDate) {
+          widget.task.dueDate = newDateTime;
+          print("Due date is set to $newDateTime");
+        } 
+        // set reminder
+        else {
+          widget.task.reminders = newDateTime;
+          print("Reminder is set to $newDateTime");
+        }
+      });
+    }
   }
 
   @override
@@ -37,6 +85,7 @@ class _TaskDetailsState extends State<TaskDetails> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Task name field 
             _isEditingName
                 ? TextField(
                     controller: _nameController,
@@ -68,13 +117,71 @@ class _TaskDetailsState extends State<TaskDetails> {
                     ),
                   ),
             SizedBox(height: 10),
-            Text('Due Date: ${widget.task.dueDate ?? "Not set"}', style: TextStyle(fontSize: 18)),
+
+            // Due date field
+            InkWell(
+              onTap:() {
+                _pickDate(true);
+              },
+              child: Text(
+                'Due Date: ${widget.task.dueDate != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.dueDate!) : "Not set"}',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
             SizedBox(height: 10),
-            Text('Status: ${widget.task.status ?? "Not set"}', style: TextStyle(fontSize: 18)),
+
+            // Status field
+            DropdownButton<String>(
+              value: _currentStatus,
+              hint: const Text("Status"),
+              icon: const Icon(Icons.arrow_downward),
+              onChanged: (String? value) {
+                setState(() {
+                  _currentStatus = value;
+                  widget.task.status = value;
+                  print("Status is set to $value");
+                });
+              },
+              items: statusOptions.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
             SizedBox(height: 10),
-            Text('Importance: ${widget.task.importance ?? "Not set"}', style: TextStyle(fontSize: 18)),
+
+            // Importance field
+            DropdownButton<String>(
+              value: _currentImportance,
+              hint: Text("Importance"),
+              icon: Icon(Icons.arrow_downward),
+              onChanged: (String? value) {
+                setState(() {
+                  _currentImportance = value;
+                  widget.task.importance = value; 
+                  print("Importance is set to $value");
+                });
+              },
+              items: importanceOptions.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value.toString()),
+                );
+              }).toList(),
+            ),
             SizedBox(height: 10),
-            Text('Reminders: ${widget.task.reminders ?? "No reminders set"}', style: TextStyle(fontSize: 18)),
+
+            // Reminders field
+            InkWell(
+              onTap:() {
+                _pickDate(false);
+              },
+              child: Text(
+                'Reminders: ${widget.task.reminders != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.reminders!) : "Not set"}',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
           ],
         ),
       ),

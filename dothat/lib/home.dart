@@ -19,10 +19,10 @@ class CategoryList {
 class Task {
   String name;
   bool isSelected;
-  String? dueDate;
+  DateTime? dueDate;
   String? status;
   String? importance;
-  String? reminders;
+  DateTime? reminders;
 
   Task(
       {required this.name,
