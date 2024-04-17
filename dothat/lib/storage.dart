@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -25,8 +26,33 @@ class TodoDB {
   ///</summary>
   Future _create(Database db, int version) async {
     String schema = await _readSchema();
-    await db.execute(schema);
+    var sp = schema.split(';');
+    for (int i = 0; i < sp.length; i++) {
+      try {
+        await db.execute(sp[i]);
+      } catch (e) {
+        developer.log(e.toString());
+      }
+    }
+    await printTableSchemas(db);
   }
+
+  Future<void> printTableSchemas(Database db) async {
+  try {
+    // This query retrieves the SQL statement used to create each table in the database
+    final List<Map<String, dynamic>> tables = await db.rawQuery(
+      "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    );
+
+    // Iterate through each table and print its creation SQL
+    for (var table in tables) {
+      developer.log('Table: ${table['name']}');
+      developer.log('Schema: ${table['sql']}\n');
+    }
+  } catch (e) {
+    developer.log('Error querying schema: $e');
+  }
+}
 
   ///<summary>
   /// Initializes the database instance.
@@ -63,7 +89,6 @@ class TodoDB {
   /// </summary>
   Future<dynamic> executeQuery(String sql, [List<dynamic>? arguments]) async {
     final db = await _initDb();
-
     return await db.rawQuery(sql, arguments);
   }
 

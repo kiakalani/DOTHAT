@@ -34,6 +34,7 @@ class Task {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isEditingListName = false;
   @override
   void initState() {
     super.initState();
@@ -132,13 +133,14 @@ class _HomePageState extends State<HomePage> {
   bool _isAddingNewTask = false;
   TextEditingController listNameController = TextEditingController();
   TextEditingController taskNameController = TextEditingController();
+  TextEditingController listNameControllerInTask = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(lists[_selectedIndex].name),
+        title: _buildTitle(),
       ),
       drawer: _buildDrawer(),
       body: Column(
@@ -147,7 +149,7 @@ class _HomePageState extends State<HomePage> {
             child: ListView(
               children: [
                 // show list of tasks in a category
-                ...List.generate(lists[_selectedIndex].tasks.length, (index) {
+                ...lists.isEmpty ? [] : List.generate(lists[_selectedIndex].tasks.length, (index) {
                   return ListTile(
                     title: Text(lists[_selectedIndex].tasks[index].name),
                     onTap: () {
@@ -172,7 +174,7 @@ class _HomePageState extends State<HomePage> {
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
                         print(
-                            "Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
+                          "Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
                         removeItem(lists[_selectedIndex], index);
                         // setState(() {
                         //   lists[_selectedIndex].tasks.removeAt(index);
@@ -200,6 +202,40 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildTitle() {
+    return _isEditingListName
+      ? TextField(
+          controller: listNameControllerInTask,
+          autofocus: true,
+          onSubmitted: (value) {
+            if (value.isNotEmpty) {
+              print("List name is changed to $value");
+              setState(() {
+                lists[_selectedIndex].name = value;
+              });
+            }
+            setState(() {
+              _isEditingListName = false;
+            });
+          },
+        )
+      : InkWell(
+          onTap: () {
+            setState(() {
+              listNameControllerInTask.text = lists[_selectedIndex].name;
+              _isEditingListName = true;
+            });
+          },
+          child: Text(
+            lists.isNotEmpty 
+              ? 
+              lists[_selectedIndex].name 
+              : '',
+              style: TextStyle(fontSize: 24),
+          ),
+        );
   }
 
   Widget _buildDrawer() {

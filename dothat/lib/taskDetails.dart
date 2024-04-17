@@ -124,7 +124,7 @@ class _TaskDetailsState extends State<TaskDetails> {
                 _pickDate(true);
               },
               child: Text(
-                'Due Date: ${widget.task.dueDate != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.dueDate!) : "Not set"}',
+                'Due Date: ${widget.task.dueDate != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.dueDate!) : "N/A"}',
                 style: TextStyle(fontSize: 18),
               ),
             ),
@@ -178,7 +178,7 @@ class _TaskDetailsState extends State<TaskDetails> {
                 _pickDate(false);
               },
               child: Text(
-                'Reminders: ${widget.task.reminders != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.reminders!) : "Not set"}',
+                'Reminders: ${widget.task.reminders != null ? DateFormat('yyyy-MM-dd – HH:mm').format(widget.task.reminders!) : "N/A"}',
                 style: TextStyle(fontSize: 18),
               ),
             ),
