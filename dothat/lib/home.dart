@@ -1,3 +1,4 @@
+import 'package:dothat/storage.dart';
 import 'package:flutter/material.dart';
 import 'taskDetails.dart';
 
@@ -33,6 +34,92 @@ class Task {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    loadCategories();
+  }
+
+  /// <summary>
+  /// Loads all of the categories into the lists instance when called
+  /// </summary>
+  Future<void> loadCategories() async {
+    var l = await TodoDB().getCategories();
+    Map<String, List<dynamic>> tasks = {};
+    for (int i = 0; i < l.length; i++) {
+      tasks[l[i]['name']] = await TodoDB().getItems(l[i]['name']);
+    }
+    setState(() {
+      lists = l
+          .map((e) => CategoryList(
+              name: e['name'],
+              tasks:
+                  tasks[e['name']]!.map((j) => Task(name: j['name'])).toList()))
+          .toList();
+      listNameController.clear();
+      _isAddingNewList = false;
+    });
+  }
+
+  /// <summary>
+  /// Adds the new category to the database and if successful, it would
+  /// then update the display to show the new category
+  /// </summary>
+  void addNewCategory(String name) {
+    TodoDB().addCategory(name).then((value) => {
+          if (value)
+            {
+              setState(() {
+                lists.add(CategoryList(name: name, tasks: []));
+                listNameController.clear();
+                _isAddingNewList = false;
+              })
+            }
+        });
+  }
+
+  /// <summary>
+  /// Removes the category at the given index from the database and the
+  /// view.
+  /// </summary>
+  void removeCategory(int index) {
+    TodoDB().deleteCategory(lists[index].name).then((value) => {
+          setState(() {
+            lists.removeAt(index);
+          })
+        });
+  }
+
+  /// <summary>
+  /// Adds an item to the provided category.
+  /// </summary>
+  void addItem(CategoryList l, String name) {
+    TodoDB().addItem(name, l.name).then((value) {
+      if (value) {
+        setState(() {
+          l.tasks.add(Task(name: name));
+          taskNameController.clear();
+          _isAddingNewTask = false;
+        });
+      }
+    });
+  }
+
+  /// <summary>
+  /// Removes an item from the category.
+  /// </summary>
+  void removeItem(CategoryList l, int i) {
+    TodoDB().deleteItem(l.tasks[i].name, l.name).then(
+      (value) {
+        setState(() {
+          l.tasks.removeAt(i);
+        });
+      },
+    );
+  }
+
+  // List<CategoryList> lists = [];
+
   List<CategoryList> lists = [
     CategoryList(
         name: 'Groceries',
@@ -67,7 +154,8 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskDetails(task: lists[_selectedIndex].tasks[index]),
+                          builder: (context) => TaskDetails(
+                              task: lists[_selectedIndex].tasks[index]),
                         ),
                       );
                     },
@@ -75,17 +163,20 @@ class _HomePageState extends State<HomePage> {
                       value: lists[_selectedIndex].tasks[index].isSelected,
                       onChanged: (bool? value) {
                         setState(() {
-                          lists[_selectedIndex].tasks[index].isSelected =value!;
+                          lists[_selectedIndex].tasks[index].isSelected =
+                              value!;
                         });
                       },
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
-                        print("Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
-                        setState(() {
-                          lists[_selectedIndex].tasks.removeAt(index);
-                        });
+                        print(
+                            "Remove task: ${lists[_selectedIndex].tasks[index].name} from list ${lists[_selectedIndex].name}");
+                        removeItem(lists[_selectedIndex], index);
+                        // setState(() {
+                        //   lists[_selectedIndex].tasks.removeAt(index);
+                        // });
                       },
                     ),
                   );
@@ -94,23 +185,18 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           _addNewItem(
-            isAdding: _isAddingNewTask, 
-            textController: taskNameController,
-            hintText: "+ Add New Task", 
-            onAdd: (String value) {
-              if (value.isNotEmpty) {
-                print("Add task: $value");
-                setState(() {
-                  lists[_selectedIndex].tasks.add(Task(name: value));
-                  taskNameController.clear();
-                  _isAddingNewTask = false;
-                });
-              }
-            },
-            toggleAdding: () => setState(() {
-              _isAddingNewTask = true;
-            })
-          )
+              isAdding: _isAddingNewTask,
+              textController: taskNameController,
+              hintText: "+ Add New Task",
+              onAdd: (String value) {
+                if (value.isNotEmpty) {
+                  print("Add task: $value");
+                  addItem(lists[_selectedIndex], value);
+                }
+              },
+              toggleAdding: () => setState(() {
+                    _isAddingNewTask = true;
+                  }))
         ],
       ),
     );
@@ -118,70 +204,63 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawer() {
     return Drawer(
-        child: Column(
-          children: [
-            // display Do that
-            Container(
+      child: Column(
+        children: [
+          // display Do that
+          Container(
               height: 100,
               color: const Color(0xFF0ABAB5),
               child: const Padding(
-                padding: EdgeInsets.only(top: 45),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Do that',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                ))),
-            Expanded(
-              child: ListView(
-                children: [
-                  // show list of categories
-                  ...List.generate(lists.length, (index) {
-                    return ListTile(
-                      title: Text(lists[index].name),
-                      selected: index == _selectedIndex,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                        Navigator.pop(context);
+                  padding: EdgeInsets.only(top: 45),
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Do that',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ))),
+          Expanded(
+            child: ListView(
+              children: [
+                // show list of categories
+                ...List.generate(lists.length, (index) {
+                  return ListTile(
+                    title: Text(lists[index].name),
+                    selected: index == _selectedIndex,
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                      Navigator.pop(context);
+                    },
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        print("Remove list: ${lists[index].name}");
+                        removeCategory(index);
                       },
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          print("Remove list: ${lists[index].name}");
-                          setState(() {
-                            lists.removeAt(index);
-                          });
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
+                    ),
+                  );
+                }),
+              ],
             ),
-            _addNewItem(
-              isAdding: _isAddingNewList, 
-              textController: listNameController, 
-              hintText: "+ New List", 
+          ),
+          _addNewItem(
+              isAdding: _isAddingNewList,
+              textController: listNameController,
+              hintText: "+ New List",
               onAdd: (String value) {
                 if (value.isNotEmpty) {
                   print("Add list: $value");
-                  setState(() {
-                    lists.add(CategoryList(name: value, tasks: []));
-                    listNameController.clear();
-                    _isAddingNewList = false;
-                  });
+                  addNewCategory(value);
                 }
               },
               toggleAdding: () => setState(() {
-                _isAddingNewList = true;
-              })
-            )
-          ],
-        ),
-      );
+                    _isAddingNewList = true;
+                  }))
+        ],
+      ),
+    );
   }
 
   // add new list or task to the list
@@ -219,18 +298,9 @@ class _HomePageState extends State<HomePage> {
           : Text(hintText),
       onTap: () {
         if (!isAdding) {
-         toggleAdding();
+          toggleAdding();
         }
       },
     );
   }
 }
-
-
-
-
-
-
-
-
-
