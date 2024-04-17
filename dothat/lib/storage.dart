@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
@@ -36,12 +38,15 @@ class TodoDB {
       // print('Yay');
       if (kIsWeb) {
         databaseFactory = databaseFactoryFfiWeb;
+        _database =
+            await openDatabase('database.db', version: 1, onCreate: _create);
       } else {
         databaseFactory = databaseFactory;
+        final directory = await getApplicationDocumentsDirectory();
+        var path = join(directory.path, 'database.db');
+        _database = await openDatabase(path, version: 1, onCreate: _create);
       }
       // String path = join('assets', 'db');
-      _database =
-          await openDatabase('database.db', version: 1, onCreate: _create);
     }
     return _database!;
   }
